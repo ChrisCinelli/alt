@@ -7,12 +7,25 @@ import * as store from './store'
 import * as utils from './utils/AltUtils'
 import makeAction from './actions'
 
+import debug from 'debug'
+
+
 class Alt {
   constructor(config = {}) {
     this.config = config
     this.serialize = config.serialize || JSON.stringify
     this.deserialize = config.deserialize || JSON.parse
     this.dispatcher = config.dispatcher || new Dispatcher()
+
+    ///// Monkey Patching the dispatcher to DEBUG!
+    var old_dispatch = this.dispatcher.dispatch;
+    this.dispatcher.dispatch = function(obj){
+       debug("alt:dispatch")("START ACTION: ", obj.action, obj.data, arguments);
+       old_dispatch.apply(this, arguments);
+       debug("alt:dispatch")("END ACTION: ", obj.action, obj.data, arguments);
+    }     
+    ///
+
     this.batchingFunction = config.batchingFunction || (callback => callback())
     this.actions = { global: {} }
     this.stores = {}
